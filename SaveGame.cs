@@ -14,7 +14,7 @@ public class SaveGame {
     {
         SaveGame.savedGames.Add(save);
         BinaryFormatter bf = new BinaryFormatter();
-        FileStream file = File.Create(Application.persistentDataPath + "/gameTimes2.gd");
+        FileStream file = File.Create(Application.persistentDataPath + "/gameTimes3.gd");
         bf.Serialize(file, savedGames);
         file.Close();
     }
@@ -31,10 +31,10 @@ public class SaveGame {
     public static void LoadGame()
     {
         Debug.Log("LoadGame()");
-        if (File.Exists(Application.persistentDataPath + "/gameTimes2.gd"))
+        if (File.Exists(Application.persistentDataPath + "/gameTimes3.gd"))
         {
             BinaryFormatter bf = new BinaryFormatter();
-            FileStream file = File.Open(Application.persistentDataPath + "/gameTimes2.gd", FileMode.Open);
+            FileStream file = File.Open(Application.persistentDataPath + "/gameTimes3.gd", FileMode.Open);
             SaveGame.savedGames = (List<Save>)bf.Deserialize(file);
             file.Close();
 
@@ -51,22 +51,68 @@ public class SaveGame {
             file.Close();
         }
     }
+
+    public static List<Save> GetLocalHighscore(LevelModel model)
+    {
+        List<Save> correctLevels = new List<Save>();
+        foreach (Save save in savedGames)
+        {
+            if (save.levelName == model.levelName && save.country == model.levelCountry)
+            {
+                correctLevels.Add(save);
+            }
+        }
+
+        if (model.type == "forward")
+        {
+            correctLevels.Sort((x, y) => -1 * x.score.CompareTo(y.score));
+        }
+
+        else
+        {
+            correctLevels.Sort((x, y) => x.time.CompareTo(y.time));
+        }
+
+        return correctLevels;
+    }
+
+    public static float GetHighestScoreFromLevel(LevelModel model)
+    {
+        List<Save> correctLevels = GetLocalHighscore(model);
+        if(correctLevels.Count == 0)
+        {
+            return 0;
+        }
+        if (model.type == "forward")
+        {
+            return correctLevels[0].score;
+        }
+        
+        else
+        {
+            return correctLevels[0].time;
+        }
+    }
 }
 
 [System.Serializable]
 public class Save
 {
     public float time;
-    private int shotsFired;
-    private int targetsHit;
-    private int score;
+    public int shotsFired;
+    public int targetsHit;
+    public int score;
+    public string type;
     public string playerName;
     public string levelName;
-    public Save(float time, string levelName, string playerName, int score)
+    public string country;
+    public Save(float time, string levelName, string playerName, int score, string country, string type)
     {
         this.time = time;
         this.levelName = levelName;
         this.playerName = playerName;
         this.score = score;
+        this.country = country;
+        this.type = type;
     }
 }

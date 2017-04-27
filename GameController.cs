@@ -53,6 +53,7 @@ public class GameController : MonoBehaviour {
     private GameObject rotationContainer;
     public GameObject forwardHolder;
     public GameObject restartButton;
+    public GameObject scoreScreen;
 
     public bool debugging = true;
 
@@ -74,10 +75,11 @@ public class GameController : MonoBehaviour {
         DOTween.Init(false, true, LogBehaviour.ErrorsOnly);
         SaveGame.LoadGame();
 
-
         initTime = Time.time;
-
-        StartCoroutine(OpenMenu(2f));
+        GameObject.Find("3DButtonUSA").GetComponent<Button3D>().OnHover();
+        GameObject.Find("3DButtonUSA").GetComponent<Button3D>().OnTrigger();
+        //LevelScreenController.instance.ShowCountry("usa");
+        //LevelScreenController.instance.SetLevel(0);
         //gameTimeController = gameTime.GetComponent<GameTimeController>();
 
         if (!debugging)
@@ -87,14 +89,6 @@ public class GameController : MonoBehaviour {
         }
 
     }
-
-    IEnumerator OpenMenu(float time)
-    {
-        yield return new WaitForSeconds(time);
-        //menu.SetActive(true);
-        //gameTimeController.ShowHighscores();
-    }
-
 
     // Update is called once per frame
     void Update () {
@@ -501,7 +495,7 @@ public class GameController : MonoBehaviour {
     {
         ScoreScreenController.instance.Hide();
         LevelScreenController.instance.SaveHighscore(1, score, playername, endTime);
-        SaveGame.SaveCurrentGame(new Save(endTime, currentLevel.ToString(), playername, score));
+        SaveGame.SaveCurrentGame(new Save(endTime, LevelScreenController.instance.currentLevelModel.levelName, playername, score, LevelScreenController.instance.currentCountry, LevelScreenController.instance.currentLevelModel.type));
         SaveGame.gameState.totalScore += score;
         SaveGame.gameState.totalPlaytime += endTime;
         SaveGame.gameState.money += score;

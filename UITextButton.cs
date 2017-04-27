@@ -8,8 +8,11 @@ public class UITextButton : UIBase {
     public TextMeshPro text;
     public Color32 color;
     public Color32 hoverColor;
-    public string keyName = "undefined";
-    public string keyType = "keyboard";
+
+    void Awake()
+    {
+        keyType = "button";
+    }
 
 	// Use this for initialization
 	void Start () {

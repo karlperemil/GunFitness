@@ -7,6 +7,8 @@ public class UIBase : MonoBehaviour {
     public Vector3 initialScale;
     internal bool scaleSet = false;
     internal int frameHover = 0;
+    public string keyType;
+    public string keyName;
 
     void Awake()
     {

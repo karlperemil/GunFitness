@@ -9,8 +9,11 @@ public class UIImageButton : UIBase
     public Texture hoverTexture;
     private Renderer rend;
     private Texture startTexture;
-    public string keyName = "erase";
-    public string keyType = "button";
+
+    void Awake()
+    {
+        keyType = "button";
+    }
 
     // Use this for initialization
     void Start()

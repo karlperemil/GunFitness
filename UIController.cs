@@ -5,6 +5,7 @@ using System.Collections.Generic;
 public class UIController : MonoBehaviour {
     public static UIController instance;
     public List<UIBase> UIComponents = new List<UIBase>();
+    private List<Button3D> mapButtons;
 
     // Use this for initialization
     void Start () {
@@ -12,6 +13,7 @@ public class UIController : MonoBehaviour {
     void Awake()
     {
         instance = this;
+        mapButtons = new List<Button3D>();
     }
 
     void Update()
@@ -21,7 +23,12 @@ public class UIController : MonoBehaviour {
 
     public void RegisterComponent(GameObject go)
     {
-        UIComponents.Add(go.GetComponent<UIBase>());
+        UIBase ui = go.GetComponent<UIBase>();
+
+        UIComponents.Add(ui);
+
+        if (ui.keyType == "map")
+            mapButtons.Add(go.GetComponent<Button3D>());
     }
 
     public void UnHover()
@@ -54,5 +61,26 @@ public class UIController : MonoBehaviour {
         {
             GameController.instance.GameOver();
         }
+        if (keyText == "map_usa")
+            LevelScreenController.instance.ShowCountry("usa");
+        if (keyText == "map_japan")
+            LevelScreenController.instance.ShowCountry("japan");
+
+
+        if (keyType == "map")
+        {
+            foreach(Button3D button in mapButtons)
+            {
+                if(button.keyName != keyText)
+                {
+                    button.selected = false;
+                }
+            }
+        }
+
+        if (keyText == "main_nextlevel")
+            LevelScreenController.instance.IncreaseLevel();
+        if (keyText == "main_prevlevel")
+            LevelScreenController.instance.DecreaseLevel();
     }
 }
