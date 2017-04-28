@@ -10,36 +10,45 @@ public class LevelScreenController : MonoBehaviour {
     public TextMeshPro scoreText;
     public HighscoreCollection highscores;
     public TextMeshPro statusText;
-    public static LevelScreenController instance;
-    private Vector3 initialScale;
     public GameObject countryLabel;
-    private LevelModel[] usaLevels;
-    private LevelModel[] japanLevels;
-    private int currentLevel = 0;
     public string currentCountry = "usa";
-    private LevelModel[] currentLevels;
+    public static LevelScreenController instance;
     public GameObject levelLabel;
     public GameObject localHighscoreText;
     public GameObject levelNumberLabel;
     public int currentLevelNumber;
     public LevelModel currentLevelModel;
 
+    private Vector3 initialScale;
+    private LevelModel[] usaLevels;
+    private LevelModel[] japanLevels;
+    private LevelModel[] chinaLevels;
+    private int currentLevel = 0;
+    private LevelModel[] currentLevels;
+
     void Awake()
     {
         instance = this;
         initialScale = this.transform.localScale;
         usaLevels = new LevelModel[] {
-            new LevelModel(0, "usa", "Houston", "forward", 60f, 35000),
+            new LevelModel(0, "usa", "Houston", "forward", 60f, 10000),
             new LevelModel(0, "usa", "Chicago", "designed", 60f, 35000),
-            new LevelModel(0, "usa", "San Francisco", "forward", 60f, 35000),
+            new LevelModel(0, "usa", "San Francisco", "forward", 60f, 15000),
             new LevelModel(0, "usa", "New York", "designed", 60f, 35000)
         };
 
         japanLevels = new LevelModel[] {
-            new LevelModel(0, "japan", "Tokyo", "forward", 60f, 35000),
+            new LevelModel(0, "japan", "Tokyo", "forward", 60f, 20000),
             new LevelModel(0, "japan", "Osaka", "designed", 60f, 35000),
-            new LevelModel(0, "japan", "Kobe", "forward", 60f, 35000),
+            new LevelModel(0, "japan", "Kobe", "forward", 60f, 25000),
             new LevelModel(0, "japan", "Sapporo", "designed", 60f, 35000)
+        };
+
+        chinaLevels = new LevelModel[] {
+            new LevelModel(0, "china", "Xiamen", "forward", 60f, 45000),
+            new LevelModel(0, "japan", "Shanghai", "designed", 60f, 35000),
+            new LevelModel(0, "japan", "Guangzhou", "forward", 60f, 55000),
+            new LevelModel(0, "japan", "Beijing", "designed", 60f, 35000)
         };
 
     }
@@ -55,13 +64,23 @@ public class LevelScreenController : MonoBehaviour {
 
     public void ShowCountry(string country)
     {
+        Debug.Log("ShowCountry");
+        if(country != currentCountry)
+        {
+            changedCountry = true;
+        }
         if(country == "usa")
         {
             countryLabel.GetComponent<TextMeshPro>().text = "USA";
             currentLevels = usaLevels;
             currentCountry = country;
         }
-        if (country == "japan")
+        if (country == "china")
+        {
+            countryLabel.GetComponent<TextMeshPro>().text = "China";
+            currentLevels = chinaLevels;
+        }
+        if(country == "japan")
         {
             countryLabel.GetComponent<TextMeshPro>().text = "Japan";
             currentLevels = japanLevels;
@@ -77,7 +96,7 @@ public class LevelScreenController : MonoBehaviour {
 
         currentLevelModel = currentLevels[currentLevelNumber];
 
-        GetHighscoreFromServer(levelNum);
+        StartCoroutine(GetHighscoreFromServer(levelNum,currentCountry));
         SetLocalHighscore();
 
         levelLabel.GetComponent<TextMeshPro>().text = currentLevelModel.levelName;
@@ -165,16 +184,16 @@ public class LevelScreenController : MonoBehaviour {
 
     public void SaveHighscore(int level, int highscore, string playername, float time)
     {
-        StartCoroutine(SaveHighscoreToServer(level,highscore,playername,time));
+        StartCoroutine(SaveHighscoreToServer(level,highscore,playername,time,currentCountry));
     }
 
     private string highscoreURL = "http://gunfitness.herokuapp.com/gethighscore/";
 
-    IEnumerator GetHighscoreFromServer(int level, int roundScore = 0, string playername = "undefined", float time = 0f)
+    IEnumerator GetHighscoreFromServer(int level, string country, int roundScore = 0, string playername = "undefined", float time = 0f)
     {
         Debug.Log("GetHighscoreFromServer");
         statusText.text = "Status: Getting highscores from server...";
-        WWW www = new WWW(highscoreURL + level.ToString());
+        WWW www = new WWW(highscoreURL + level.ToString() + "/" + country);
         yield return www;
         Debug.Log(www.text);
         var json = JsonUtility.FromJson<HighscoreCollection>(www.text);
@@ -183,13 +202,13 @@ public class LevelScreenController : MonoBehaviour {
         if(roundScore > 0)
         {
             Array.Resize(ref highscores.highscoreentries, highscores.highscoreentries.Length);
-            highscores.highscoreentries[highscores.highscoreentries.Length - 1] = new HighscoreEntry(level, roundScore, playername, "undefined",(float) time);
+            highscores.highscoreentries[highscores.highscoreentries.Length - 1] = new HighscoreEntry(level, roundScore, playername, "undefined",(float) time,currentCountry);
         }
         int count = 0;
         foreach(HighscoreEntry entry in highscores.highscoreentries)
         {
             scoreText.text +=  entry.playername + ":" + string.Format("{0:n0}", entry.highscore)  + "\n";
-            if (count > 5)
+            if (count > 9)
             {
                 yield break;
             }
@@ -199,8 +218,10 @@ public class LevelScreenController : MonoBehaviour {
 
     private string saveHighscoreURL = "http://gunfitness.herokuapp.com/sendhighscore";
     public GameObject mainScreenLabel;
+    private bool changedCountry;
+    
 
-    IEnumerator SaveHighscoreToServer(int level, int highscore, string playername, float time)
+    IEnumerator SaveHighscoreToServer(int level, int highscore, string playername, float time, string country)
     {
         Debug.Log("SaveHighscoreToServer");
         statusText.text = "Status: Saving highscore to server...";
@@ -211,6 +232,7 @@ public class LevelScreenController : MonoBehaviour {
         form.AddField("playername", playername);
         form.AddField("time", time.ToString());
         form.AddField("key", key);
+        form.AddField("country", country);
         WWW www = new WWW(saveHighscoreURL,form);
         yield return www;
         if (!string.IsNullOrEmpty(www.error))
@@ -220,7 +242,7 @@ public class LevelScreenController : MonoBehaviour {
         else {
             print(www.text);
         }
-        StartCoroutine(GetHighscoreFromServer(1,highscore,playername));
+        StartCoroutine(GetHighscoreFromServer(1,currentCountry,highscore,playername));
     }
 
     String CreateKey(int level, int highscore, string playername)
@@ -253,14 +275,16 @@ public class HighscoreEntry
     public float highscore;
     public string playername;
     public string _id;
+    public string country;
     public float time;
-    public HighscoreEntry(int level, float highscore, string playername, string _id, float time)
+    public HighscoreEntry(int level, float highscore, string playername, string _id, float time, string country)
     {
         this.level = level;
         this.highscore = highscore;
         this.playername = playername;
         this._id = _id;
         this.time = time;
+        this.country = country;
     }
 }
 

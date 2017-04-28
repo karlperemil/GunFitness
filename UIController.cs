@@ -41,6 +41,7 @@ public class UIController : MonoBehaviour {
 
     public void UITriggered(string keyType, string keyText)
     {
+        Debug.Log("UITriggered " + keyType +" "+ keyText);
         if(keyType == "keyboard")
         {
             ScoreScreenController.instance.KeyTriggered(keyText);
@@ -63,8 +64,9 @@ public class UIController : MonoBehaviour {
         }
         if (keyText == "map_usa")
             LevelScreenController.instance.ShowCountry("usa");
-        if (keyText == "map_japan")
-            LevelScreenController.instance.ShowCountry("japan");
+        if (keyText == "map_china")
+            LevelScreenController.instance.ShowCountry("china");
+
 
 
         if (keyType == "map")
