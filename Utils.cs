@@ -2,8 +2,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using System;
+using System.Linq;
 
-public static class GameTimeController {
+public static class Utils {
+    public static string FirstCharToUpper(string input)
+    {
+        if (String.IsNullOrEmpty(input))
+            throw new ArgumentException("ARGH!");
+        return input.First().ToString().ToUpper() + input.Substring(1);
+    }
     public static string FloatToTime(float toConvert, string format)
     {
         switch (format)

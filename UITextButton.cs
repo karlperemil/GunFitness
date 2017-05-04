@@ -12,6 +12,7 @@ public class UITextButton : UIBase {
     void Awake()
     {
         keyType = "button";
+        base.SetScale();
     }
 
 	// Use this for initialization
@@ -33,6 +34,7 @@ public class UITextButton : UIBase {
     }
 
     public override void OnTrigger() {
+        Debug.Log("OnTrigger");
         UIController.instance.UITriggered(keyType, keyName);
         base.OnTrigger();
     }

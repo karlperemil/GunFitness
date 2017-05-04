@@ -3,6 +3,7 @@ using System.Collections;
 using System;
 using System.Collections.Generic;
 using DG.Tweening;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour {
 
@@ -54,12 +55,15 @@ public class GameController : MonoBehaviour {
     public GameObject forwardHolder;
     public GameObject restartButton;
     public GameObject scoreScreen;
+    public GameObject levelScreen;
+    public GameObject fitnessCube;
 
     public bool debugging = true;
 
     void Awake()
     {
         instance = this;
+        Application.backgroundLoadingPriority = ThreadPriority.Low;
     }
 
     // Use this for initialization
@@ -71,16 +75,17 @@ public class GameController : MonoBehaviour {
         levelContainer = new GameObject("LevelContainer");
         rotationContainer = new GameObject("RotationContainer");
         restartButton.GetComponent<UIImageButton>().Hide(0f);
+        //levelScreen.SetActive(true);
+        scoreScreen.SetActive(false);
+        //GameObject.Find("3DButtonUSA").GetComponent<Button3D>().OnHover();
+        //GameObject.Find("3DButtonUSA").GetComponent<Button3D>().OnTrigger();
         GameObject.Find("Level Sections").SetActive(false);
         DOTween.Init(false, true, LogBehaviour.ErrorsOnly);
         SaveGame.LoadGame();
 
         initTime = Time.time;
-        GameObject.Find("3DButtonUSA").GetComponent<Button3D>().OnHover();
-        GameObject.Find("3DButtonUSA").GetComponent<Button3D>().OnTrigger();
-        //LevelScreenController.instance.ShowCountry("usa");
-        //LevelScreenController.instance.SetLevel(0);
-        //gameTimeController = gameTime.GetComponent<GameTimeController>();
+        //GameObject.Find("3DButtonUSA").GetComponent<Button3D>().OnHover();
+        //GameObject.Find("3DButtonUSA").GetComponent<Button3D>().OnTrigger();
 
         if (!debugging)
         {
@@ -88,6 +93,44 @@ public class GameController : MonoBehaviour {
             GameObject.Find("Prefabs").SetActive(false);
         }
 
+        //StartCoroutine(Wait());
+
+    }
+
+    IEnumerator Wait()
+    {
+        yield return new WaitForSeconds(3f);
+        StartCoroutine(LoadCountry("china"));
+        yield return new WaitForSeconds(5f);
+        StartCoroutine(LoadCountry("usa"));
+    }
+
+    IEnumerator LoadCountry(string country)
+    {
+        Debug.Log("Starting Load Country");
+        fitnessCube.GetComponent<Animator>().SetBool("Open", false);
+        yield return new WaitForSeconds(2f);
+        if (currentScene != "undefined" )
+        {
+            SceneManager.UnloadScene(currentScene);
+        }
+
+        string sceneToLoad = "undefined";
+        if(country == "usa")
+        {
+            currentScene = "usa";
+        }
+        else if(country == "china")
+        {
+            currentScene = "china";
+        }
+
+        AsyncOperation async = SceneManager.LoadSceneAsync(currentScene, LoadSceneMode.Additive);
+        yield return async;
+        Debug.Log("Loading complete " + country);
+        fitnessCube.GetComponent<Animator>().SetBool("Open", true);
+        yield return new WaitForSeconds(3f);
+        TriggerGameStart();
     }
 
     // Update is called once per frame
@@ -286,7 +329,16 @@ public class GameController : MonoBehaviour {
 
         */
 
-        TriggerGameStart();
+        Debug.Log("Current Country: " + LevelScreenController.instance.currentCountry);
+        if(currentScene != LevelScreenController.instance.currentCountry)
+        {
+            Debug.Log("Current Country is not same as current scene");
+            StartCoroutine(LoadCountry(LevelScreenController.instance.currentCountry));
+        }
+        else
+        {
+            TriggerGameStart();
+        }
     }
 
     private void ShowMoveCenter()
@@ -488,6 +540,7 @@ public class GameController : MonoBehaviour {
     }
 
     public string playername = "undefined";
+    private string currentScene = "undefined";
 
     public float heightPercent { get; private set; }
 
@@ -501,6 +554,7 @@ public class GameController : MonoBehaviour {
         SaveGame.gameState.money += score;
         SaveGame.gameState.shotsFired += shotsFired;
         SaveGame.SaveProgress();
+        LevelScreenController.instance.Show();
     }
 
     void PoolLevel()

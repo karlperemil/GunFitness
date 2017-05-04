@@ -5,18 +5,19 @@ using System.Collections.Generic;
 
 public class ScoreScreenController : MonoBehaviour {
     public static ScoreScreenController instance;
-    private GameObject scoreText;
-    private GameObject scoreTitle;
+    public GameObject scoreText;
+    public GameObject goalText;
     public TextMeshPro playerName;
     public GameObject keyPrefab;
+    public GameObject failed;
+    public GameObject completed;
+    public GameObject levelName;
     private bool firstTime = true;
 
     // Use this for initialization
     void Start () {
-        scoreTitle = GameObject.Find("ScoreTitle");
-        scoreText = GameObject.Find("ScoreText");
         CreateKeyboard();
-        Hide();
+        Hide(0f);
         
     }
     void Awake()
@@ -27,16 +28,47 @@ public class ScoreScreenController : MonoBehaviour {
 
     public void Show(int score, float endTime)
     {
-        scoreText.GetComponent<TextMeshPro>().text = string.Format("{0:n0}", score);
+        Debug.Log("Showing scorescreen");
+        gameObject.SetActive(true);
+        
         int count = 0;
         foreach(Transform child in transform)
         {
             child.gameObject.SetActive(true);
             child.transform.localScale = new Vector3();
             child.transform.DOScale(child.GetComponent<UIBase>().initialScale, .4f).SetDelay(count * .05f);
-            Debug.Log(child.gameObject.name);
-            Debug.Log(child.GetComponent<UIBase>().initialScale);
+            Debug.Log(child.gameObject.name+" "+ child.GetComponent<UIBase>().initialScale);
             count++;
+        }
+
+        LevelModel model = LevelScreenController.instance.currentLevelModel;
+        bool completedLevel = false;
+        if(model.type == "forward")
+        {
+            completedLevel = score > model.goalScore ? true : false;
+            scoreText.GetComponent<TextMeshPro>().text = "Score:  <size=48>" + string.Format("{0:n0}", score) + "</size>";
+            goalText.GetComponent<TextMeshPro>().text = "Goal:  <size=48>" + string.Format("{0:n0}", model.goalScore) + "</size>";
+        }
+        else
+        {
+            completedLevel = endTime < model.goalTime ? true : false;
+            scoreText.GetComponent<TextMeshPro>().text = "Time:  <size=48>" + Utils.FloatToTime(endTime,"0:00.00") + "</size>";
+            goalText.GetComponent<TextMeshPro>().text = "Goal:  <size=48>" + string.Format("{0:n0}", model.goalTime) + "</size>";
+        }
+
+        if (completedLevel)
+        {
+            completed.SetActive(true);
+            failed.SetActive(false);
+            completed.transform.localScale = new Vector3();
+            completed.transform.DOScale(completed.GetComponent<UIBase>().initialScale, .3f);
+        }
+        else
+        {
+            failed.SetActive(true);
+            completed.SetActive(false);
+            failed.transform.localScale = new Vector3();
+            failed.transform.DOScale(completed.GetComponent<UIBase>().initialScale, .3f);
         }
     }
 
@@ -85,6 +117,7 @@ public class ScoreScreenController : MonoBehaviour {
             key.transform.localPosition = keyPos;
             UITextButton keyScript = key.GetComponent<UITextButton>();
             keyScript.text.text = c.ToString();
+            keyScript.keyType = "keyboard";
             keyList.Add(keyScript);
             keyScript.initialScale = new Vector3(.5f, .5f,.01f);
             keyScript.scaleSet = true;
@@ -99,8 +132,8 @@ public class ScoreScreenController : MonoBehaviour {
             GameObject key = (GameObject)Instantiate(keyPrefab, transform);
             key.transform.localPosition = keyPos;
             UITextButton keyScript = key.GetComponent<UITextButton>();
-            Debug.Log(keyScript);
             keyScript.text.text = c.ToString();
+            keyScript.keyType = "keyboard";
             keyList.Add(keyScript);
             keyScript.initialScale = new Vector3(.5f, .5f, .01f);
             keyScript.scaleSet = true;
@@ -116,6 +149,7 @@ public class ScoreScreenController : MonoBehaviour {
             key.transform.localPosition = keyPos;
             UITextButton keyScript = key.GetComponent<UITextButton>();
             keyScript.text.text = c.ToString();
+            keyScript.keyType = "keyboard";
             keyList.Add(keyScript);
             keyScript.initialScale = new Vector3(.5f, .5f, .01f);
             keyScript.scaleSet = true;

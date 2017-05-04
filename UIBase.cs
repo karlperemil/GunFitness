@@ -12,6 +12,12 @@ public class UIBase : MonoBehaviour {
 
     void Awake()
     {
+        SetScale();
+    }
+
+    internal void SetScale()
+    {
+        Debug.Log("Awake " + gameObject.name + " " + transform.localScale);
         this.initialScale = this.transform.localScale;
     }
 

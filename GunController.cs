@@ -10,12 +10,19 @@ public class GunController : MonoBehaviour {
     private Valve.VR.EVRButtonId axis2 = Valve.VR.EVRButtonId.k_EButton_Axis2;
     private Valve.VR.EVRButtonId axis3 = Valve.VR.EVRButtonId.k_EButton_Axis3;
     private Valve.VR.EVRButtonId axis4 = Valve.VR.EVRButtonId.k_EButton_Axis4;
+    private Valve.VR.EVRButtonId padButtonDown = Valve.VR.EVRButtonId.k_EButton_DPad_Down;
+    private Valve.VR.EVRButtonId padButtonLeft = Valve.VR.EVRButtonId.k_EButton_DPad_Left;
+    private Valve.VR.EVRButtonId padButtonRight = Valve.VR.EVRButtonId.k_EButton_DPad_Right;
+    private Valve.VR.EVRButtonId padButtonUp = Valve.VR.EVRButtonId.k_EButton_DPad_Up;
     public bool triggerDown = false;
     public bool triggerUp = false;
     public bool triggerPressed = false;
     public bool gripDown = false;
     public bool gripUp = false;
     public bool gripPressed = false;
+    public bool padDown = false;
+    public bool padUp = false;
+    public bool padPressed = false;
     public SteamVR_Controller.Device controller{get{return SteamVR_Controller.Input((int)trackedObj.index);}}
 
     public GameObject lineRender;
@@ -110,6 +117,21 @@ public class GunController : MonoBehaviour {
         gripUp = controller.GetPressUp(gripButton);
         gripPressed = controller.GetPress(gripButton);
 
+        padDown = controller.GetPressDown(padButtonDown) ? true : padDown;
+        padDown = controller.GetPressDown(padButtonLeft) ? true : padDown;
+        padDown = controller.GetPressDown(padButtonRight) ? true : padDown;
+        padDown = controller.GetPressDown(padButtonUp) ? true : padDown;
+
+        padPressed = controller.GetPress(padButtonDown) ? true : padDown;
+        padPressed = controller.GetPress(padButtonLeft) ? true : padDown;
+        padPressed = controller.GetPress(padButtonRight) ? true : padDown;
+        padPressed = controller.GetPress(padButtonUp) ? true : padDown;
+
+        padUp = controller.GetPressUp(padButtonDown) ? true : padDown;
+        padUp = controller.GetPressUp(padButtonLeft) ? true : padDown;
+        padUp = controller.GetPressUp(padButtonRight) ? true : padDown;
+        padUp = controller.GetPressUp(padButtonUp) ? true : padDown;
+
         RaycastHit hit;
         if (Physics.Raycast(muzzle.transform.position, muzzle.transform.forward, out hit))
         {
@@ -199,10 +221,10 @@ public class GunController : MonoBehaviour {
             partSys.Play();
 
             Vector3 muzzlePos = muzzle.transform.position;
-            var line = muzzle.transform.position + (transform.forward * 100f);
-            var rotatedLine = Quaternion.AngleAxis(48f, transform.right) * line;
+            var line = muzzle.transform.position + (muzzle.transform.forward * 100f);
+            var rotatedLine = Quaternion.AngleAxis(55f, transform.right) * line;
             GameObject newLineRender = Instantiate(lineRender) as GameObject;
-            newLineRender.GetComponent<LineRenderer>().SetPositions(new Vector3[] { muzzlePos, rotatedLine });
+            newLineRender.GetComponent<LineRenderer>().SetPositions(new Vector3[] { muzzlePos, line });
             newLineRender.GetComponent<LineRenderer>().enabled = true;
             newLineRender.SetActive(true);
             newLineRender.GetComponent<GunBeam>().Fade();

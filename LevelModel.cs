@@ -9,12 +9,14 @@ public class LevelModel {
     public float goalTime = 60f;
     public float goalScore = 30000f;
     private bool unlocked = false;
-	// Use this for initialization
-	void Start () {
+    private string difficulty;
+
+    // Use this for initialization
+    void Start () {
 	
 	}
 
-    public LevelModel(int levelNumber, string levelCountry, string levelName, string type, float goalTime, float goalScore)
+    public LevelModel(int levelNumber, string levelCountry, string levelName, string type, float goalTime, float goalScore, bool unlocked = false)
     {
         this.levelNumber = levelNumber;
         this.levelCountry = levelCountry;
@@ -22,6 +24,7 @@ public class LevelModel {
         this.type = type;
         this.goalTime = goalTime;
         this.goalScore = goalScore;
+        this.unlocked = unlocked;
     }
 	
 	// Update is called once per frame

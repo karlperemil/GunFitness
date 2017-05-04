@@ -10,7 +10,7 @@ public class ForwardController : MonoBehaviour {
     private int currentLevel = 0;
     public GameObject[] levels;
     private List<GameObject> currentObstacles;
-    private int lives = 2;
+    private int lives = 0;
     private GameObject latestLevelEnd;
     private HeadController headController;
     public static ForwardController instance;
@@ -70,7 +70,7 @@ public class ForwardController : MonoBehaviour {
         gameStarted = false;
         Debug.Log("Game over");
         currentLevel = 0;
-        lives = 2;
+        lives = 0;
         foreach (Transform child in transform)
         {
             ObjectPool.instance.PoolObject(child.gameObject);
@@ -116,7 +116,7 @@ public class ForwardController : MonoBehaviour {
             if (t == "BoxBlue" || t == "BoxYellow")
             {
                 //base height is 1.85 we move this by a percentage so low balls remaing almost the same and high balls are much lower than normal
-                pooled.transform.Translate(Vector3.up * (GameController.instance.heightPercent) );
+                //pooled.transform.Translate(Vector3.up * (GameController.instance.heightPercent) );
             }
             if (n == "LevelEnd")
             {

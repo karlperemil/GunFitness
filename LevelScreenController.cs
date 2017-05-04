@@ -16,6 +16,7 @@ public class LevelScreenController : MonoBehaviour {
     public GameObject levelLabel;
     public GameObject localHighscoreText;
     public GameObject levelNumberLabel;
+    public GameObject startButton;
     public int currentLevelNumber;
     public LevelModel currentLevelModel;
 
@@ -31,10 +32,10 @@ public class LevelScreenController : MonoBehaviour {
         instance = this;
         initialScale = this.transform.localScale;
         usaLevels = new LevelModel[] {
-            new LevelModel(0, "usa", "Houston", "forward", 60f, 10000),
+            new LevelModel(0, "usa", "Houston", "forward", 60f, 10000, true),
             new LevelModel(0, "usa", "Chicago", "designed", 60f, 35000),
             new LevelModel(0, "usa", "San Francisco", "forward", 60f, 15000),
-            new LevelModel(0, "usa", "New York", "designed", 60f, 35000)
+            new LevelModel(0, "usa", "New York", "designed", 60f, 35000),
         };
 
         japanLevels = new LevelModel[] {
@@ -51,10 +52,16 @@ public class LevelScreenController : MonoBehaviour {
             new LevelModel(0, "japan", "Beijing", "designed", 60f, 35000)
         };
 
+        levelDictionary = new Dictionary<string, LevelModel[]>();
+        levelDictionary.Add("usa", usaLevels);
+        levelDictionary.Add("japan", japanLevels);
+        levelDictionary.Add("china", chinaLevels);
+
     }
 
 	// Use this for initialization
 	void Start () {
+        lockedText.SetActive(false);
 	}
 	
 	// Update is called once per frame
@@ -69,25 +76,31 @@ public class LevelScreenController : MonoBehaviour {
         {
             changedCountry = true;
         }
-        if(country == "usa")
+        currentCountry = country;
+        if (country == "usa")
         {
             countryLabel.GetComponent<TextMeshPro>().text = "USA";
             currentLevels = usaLevels;
-            currentCountry = country;
+            currentDifficulty = "Easy";
         }
         if (country == "china")
         {
             countryLabel.GetComponent<TextMeshPro>().text = "China";
             currentLevels = chinaLevels;
+            currentDifficulty = "Medium";
         }
         if(country == "japan")
         {
             countryLabel.GetComponent<TextMeshPro>().text = "Japan";
             currentLevels = japanLevels;
+            currentDifficulty = "Hard";
         }
 
         SetLevel(0);
     }
+
+    public GameObject lockedText;
+    private string previousLevel = "undefined";
 
     public void SetLevel(int levelNum)
     {
@@ -95,6 +108,20 @@ public class LevelScreenController : MonoBehaviour {
         currentLevelNumber = levelNum;
 
         currentLevelModel = currentLevels[currentLevelNumber];
+
+        if (!CheckIfLevelUnlocked())
+        {
+            lockedText.GetComponent<TextMeshPro>().text = "Locked\n<size=2.5> Complete " + previousLevel + " to play.";
+            lockedText.SetActive(true);
+            mainScreenLabel.SetActive(false);
+            startButton.SetActive(false);
+        }
+        else
+        {
+            lockedText.SetActive(false);
+            mainScreenLabel.SetActive(true);
+            startButton.SetActive(true);
+        }
 
         StartCoroutine(GetHighscoreFromServer(levelNum,currentCountry));
         SetLocalHighscore();
@@ -114,7 +141,7 @@ public class LevelScreenController : MonoBehaviour {
             {
                 status = "<color=green>Completed</color>";
             }
-            beat = "Beat: " + GameTimeController.FloatToTime(currentLevelModel.goalTime, "0:00.0");
+            beat = "Beat: " + Utils.FloatToTime(currentLevelModel.goalTime, "0:00.0");
         }
         else
         {
@@ -126,17 +153,58 @@ public class LevelScreenController : MonoBehaviour {
             {
                 status = "<color=red>Uncompleted</color>";
             }
-            beat = "Beat: " + string.Format("{0:n0}", currentLevelModel.goalScore) ;
+            beat = "Beat: " + string.Format("{0:n0}", currentLevelModel.goalScore);
         }
 
-        levelNumberLabel.GetComponent<TextMeshPro>().text = (levelNum + 1).ToString();
+        string highScoreStr = highestScore.ToString();
+        if (highestScore == 0)
+            highScoreStr = "None";
 
-        string mainScreenText = "<size=4>Mode: " + currentLevels[currentLevelNumber].type + "</size>\n\n";
-        mainScreenText += "Best Score:\n<size=8>" + highestScore + "</size>\n\n";
+        levelNumberLabel.GetComponent<TextMeshPro>().text = (levelNum + 1).ToString();
+        string scoreOrTime = currentLevelModel.type == "designed" ? "Time" : "Score";
+
+        string mainScreenText = "<size=3>Mode: " + Utils.FirstCharToUpper(currentLevels[currentLevelNumber].type) + "</size>\n";
+        mainScreenText += "<size=3>Difficulty: " + currentDifficulty + "</size>\n\n";
+        mainScreenText += "<size=2.5>Best "+ scoreOrTime+ "</size>\n<size=8>" + highScoreStr + "</size>\n\n";
         mainScreenText += beat + "\n";
         mainScreenText += "Status: " + status;
 
         mainScreenLabel.GetComponent<TextMeshPro>().text = mainScreenText;
+    }
+
+    private bool CheckIfLevelUnlocked()
+    {
+        if (currentLevelNumber == 0)
+            return true;
+        bool isUnlocked;
+        LevelModel model = currentLevels[currentLevelNumber - 1];
+        previousLevel = model.levelName;
+        float highscore = SaveGame.GetHighestScoreFromLevel(model);
+        if(model.type == "forward")
+        {
+            if(highscore > model.goalScore)
+            {
+                isUnlocked = true;
+            }
+            else
+            {
+                isUnlocked = false;
+            }
+        }
+        else
+        {
+            if(highscore < model.goalTime && highscore != 0)
+            {
+                isUnlocked = true;
+            }
+            else
+            {
+                isUnlocked = false;
+            }
+        }
+
+        return isUnlocked;
+
     }
 
     void SetLocalHighscore()
@@ -151,14 +219,14 @@ public class LevelScreenController : MonoBehaviour {
             }
             else
             {
-                localHighscoreText += save.playerName + " : " + GameTimeController.FloatToTime(save.time, "0:00.0") ;
+                localHighscoreText += save.playerName + " : " + Utils.FloatToTime(save.time, "0:00.0") ;
             }
         }
     }
 
     public void IncreaseLevel()
     {
-        if (currentLevelNumber + 1 > 4)
+        if (currentLevelNumber + 1 > 3)
             return;
         currentLevelNumber++;
         SetLevel(currentLevelNumber);
@@ -193,7 +261,8 @@ public class LevelScreenController : MonoBehaviour {
     {
         Debug.Log("GetHighscoreFromServer");
         statusText.text = "Status: Getting highscores from server...";
-        WWW www = new WWW(highscoreURL + level.ToString() + "/" + country);
+        string mode = levelDictionary[currentCountry][currentLevel].type;
+        WWW www = new WWW(highscoreURL + level.ToString() + "/" + country + "/" + mode);
         yield return www;
         Debug.Log(www.text);
         var json = JsonUtility.FromJson<HighscoreCollection>(www.text);
@@ -207,7 +276,7 @@ public class LevelScreenController : MonoBehaviour {
         int count = 0;
         foreach(HighscoreEntry entry in highscores.highscoreentries)
         {
-            scoreText.text +=  entry.playername + ":" + string.Format("{0:n0}", entry.highscore)  + "\n";
+            scoreText.text +=  entry.playername + ": " + string.Format("{0:n0}", entry.highscore)  + "\n";
             if (count > 9)
             {
                 yield break;
@@ -219,6 +288,8 @@ public class LevelScreenController : MonoBehaviour {
     private string saveHighscoreURL = "http://gunfitness.herokuapp.com/sendhighscore";
     public GameObject mainScreenLabel;
     private bool changedCountry;
+    private Dictionary<string, LevelModel[]> levelDictionary;
+    private string currentDifficulty;
     
 
     IEnumerator SaveHighscoreToServer(int level, int highscore, string playername, float time, string country)

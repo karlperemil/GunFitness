@@ -9,7 +9,8 @@ public class UIController : MonoBehaviour {
 
     // Use this for initialization
     void Start () {
-	}
+
+    }
     void Awake()
     {
         instance = this;
@@ -29,6 +30,8 @@ public class UIController : MonoBehaviour {
 
         if (ui.keyType == "map")
             mapButtons.Add(go.GetComponent<Button3D>());
+        if (ui.keyName == "map_usa")
+            go.GetComponent<Button3D>().OnTrigger();
     }
 
     public void UnHover()

@@ -47,7 +47,7 @@ public class HeadController : MonoBehaviour {
     public void DisplayLivesRemaining(int lives)
     {
         Debug.Log("DisplayLivesRemaining " + lives);
-        livesRemainingText.GetComponent<TextMeshPro>().text = lives + "\n❤";
+        livesRemainingText.GetComponent<TextMeshPro>().text = lives.ToString();
         livesRemainingText.transform.DOScale(.11f, .3f);
         livesRemainingText.transform.DOScale(0f, .3f).SetDelay(2f);
     }
